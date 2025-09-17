@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Love Hunt — Quiz Reveal</title>
+  <style>
+    :root{
+      --bg: radial-gradient(1200px 800px at 10% 10%, #ffe4ec 0%, #fff 30%, #f7fbff 70%, #eef6ff 100%);
+      --card: rgba(255,255,255,0.75);
+      --text: #0f172a; --muted:#475569; --accent:#ec4899; --accent2:#8b5cf6;
+      --ok:#16a34a; --bad:#ef4444; --ring:rgba(236,72,153,.35);
+      --shadow:0 10px 30px rgba(2,6,23,.08);
+    }
+    .dark{
+      --bg:radial-gradient(1200px 800px at 10% 10%, #1f1320 0%, #0b0b10 40%, #0a0e1a 100%);
+      --card:rgba(255,255,255,0.06); --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#f472b6; --accent2:#a78bfa; --shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.45;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;z-index:10;backdrop-filter:saturate(140%) blur(8px);background:linear-gradient(to right, rgba(255,255,255,.6), rgba(255,255,255,.3));border-bottom:1px solid rgba(148,163,184,.25)}
+    .dark header{background:linear-gradient(to right, rgba(17,24,39,.6), rgba(17,24,39,.3))}
+    .wrap{max-width:900px;margin:0 auto;padding:18px 16px}
+    h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .card{background:var(--card);border:1px solid rgba(148,163,184,.3);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;background:rgba(236,72,153,.14);color:var(--accent);border:1px solid rgba(236,72,153,.3)}
+    .empt{background:#e2e8f0;height:10px;border-radius:999px;overflow:hidden}
+    .bar{height:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px}
+    input[type=text]{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,.5);background:rgba(255,255,255,.7);color:var(--text)}
+    .dark input[type=text]{background:rgba(15,23,42,.6)}
+    button,.btn{appearance:none;border:1px solid rgba(148,163,184,.35);background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.6));color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .06s ease}
+    .dark button,.dark .btn{background:linear-gradient(180deg, rgba(30,41,59,.8), rgba(15,23,42,.6))}
+    button:hover,.btn:hover{transform:translateY(-1px)}
+    .primary{border-color:transparent;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+    .hint{font-size:13px;color:var(--muted)}
+    .result{font-weight:700;margin-top:8px}
+    .ok{color:var(--ok)} .bad{color:var(--bad)}
+    .foot{display:flex;justify-content:space-between;margin-top:12px}
+
+    .hero{display:none;place-items:center;text-align:center}
+    .hero.open{display:grid}
+    .hero img{max-width:min(800px,95%);max-height:60vh;object-fit:contain;border-radius:16px;border:1px solid rgba(148,163,184,.35);box-shadow:var(--shadow)}
+    .hero video{max-width:min(800px,95%);max-height:60vh;object-fit:contain;border-radius:16px;border:1px solid rgba(148,163,184,.35);box-shadow:var(--shadow);background:#000}
+
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;display:none}
+    .fall{position:fixed;pointer-events:none;font-size:18px;animation:fall 2.5s linear forwards}
+    @keyframes fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:0}10%{opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap row" style="justify-content:space-between">
+    <h1>Love Hunt <span style="color:var(--accent)">❤</span></h1>
+    <div class="row">
+      <button id="themeBtn">🌗 Theme</button>
+      <span class="badge" id="progressBadge">0 / 10</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card" id="intro">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div style="font-weight:800;font-size:18px">A tiny quiz about us 🫶</div>
+        <div class="muted">Answer all 10 correctly to unlock your surprise.</div>
+      </div>
+      <button id="startBtn" class="primary">Start</button>
+    </div>
+  </section>
+
+  <div style="height:14px"></div>
+  <div class="empt"><div class="bar" id="prog" style="width:0%"></div></div>
+  <div style="height:14px"></div>
+
+  <section class="card" id="quiz" style="display:none">
+    <div id="qnum" class="muted" style="margin-bottom:6px"></div>
+    <div id="qtext" style="font-weight:800;margin-bottom:8px"></div>
+    <input id="answer" type="text" placeholder="Type your answer" autocomplete="off" />
+    <div class="hint" id="hint"></div>
+    <div class="result" id="result"></div>
+    <div class="foot">
+      <button id="hintBtn">💡 Hint</button>
+      <div class="row">
+        <button id="checkBtn" class="primary">Check</button>
+        <button id="nextBtn" disabled>Next ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero" id="reveal">
+    <div class="card" style="padding:16px">
+      <div style="font-weight:900;font-size:20px;margin-bottom:10px">You did it! 🎉</div>
+      <div class="media-wrap" style="display:grid;place-items:center">
+        <img id="finalImg" alt="Surprise" style="display:none"/>
+        <video id="finalVideo" controls playsinline style="display:none"></video>
+      </div>
+      <div style="margin-top:12px">
+        <a id="galleryLink" class="btn primary" style="display:inline-block;text-decoration:none;padding:10px 14px;border-radius:12px" href="#" target="_blank">Open Our Gallery</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ====== CONFIG: edit these ======
+  const GALLERY_URL = 'https://<your-username>.github.io/love-gallery/'; // ← change to your real gallery link
+  const FINAL_IMAGE_SRC = './gift.jpg'; // local './gift.jpg' OR any https image OR data URL
+  const FINAL_VIDEO_SRC = ''; // optional: './gift.mp4' or https URL; if set, video shows instead of image
+
+  const QUESTIONS = [
+    { q: 'Where did we first meet?', answers: ['Biggis','Asian Mall','Biggies'], hint: 'Location 💙' },
+    { q: 'Who is more annoying?', answers: ['Sachin','sachin'], hint: 'Easy peasy' },
+    { q: 'Which dessert do we usually share?', answers: ['brownie','brownie icecream'], hint: 'we both used to feed each other' },
+    { q: 'Month we started dating?', answers: ['feb','march','april','may','02'], hint: 'Summer' },
+    { q: 'My nickname you use the most?', answers: ['sanji'], hint: 'Starts with S' },
+    { q: 'Your favorite flowers?', answers: ['tulip','lotus'], hint: 'I sent a picture of it one day' },
+    { q: 'Sachins is a stupid person', answers: ['yes','yes'], hint: '' },
+    { q: 'where did you first hug me?', answers: ['lift','elevator'], hint: 'no hint, you should remember this' },
+    { q: 'what was the name of my dog?', answers: ['honey','Honey'], hint: 'guess karo plej' },
+    { q: 'What is the last thing that we say before sleeping?', answers: ['I love you','love you','I love You'], hint: 'Never goodbye 💫' }
+  ];
+  // =================================
+
+  // small helpers
+  const $ = s => document.querySelector(s);
+  const toast = (m)=>{ const t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',1800); };
+  const norm = (s)=> (s||'').toString().toLowerCase().replace(/[^a-z0-9]+/g,'').trim();
+
+  let idx = 0; // current question index
+  let correct = 0; // number correct
+  let usedHint = new Set();
+
+  function updateProgress(){
+    $('#progressBadge').textContent = `${correct} / ${QUESTIONS.length}`;
+    const pct = Math.round(100 * correct / QUESTIONS.length);
+    $('#prog').style.width = pct + '%';
+  }
+
+  function renderQuestion(){
+    const item = QUESTIONS[idx];
+    $('#qnum').textContent = `Question ${idx+1} of ${QUESTIONS.length}`;
+    $('#qtext').textContent = item.q;
+    $('#answer').value = '';
+    $('#result').textContent='';
+    $('#hint').textContent = usedHint.has(idx) ? ('Hint: ' + (item.hint||'')) : '';
+    $('#nextBtn').disabled = true;
+    $('#quiz').style.display = 'block';
+    $('#answer').focus();
+  }
+
+  function hearts(){
+    for(let i=0;i<16;i++) setTimeout(()=>{
+      const e=document.createElement('div'); e.className='fall'; e.textContent=['💖','💘','💝','💗','💓'][Math.floor(Math.random()*5)];
+      e.style.left = (Math.random()*100)+'vw'; e.style.top='-5vh'; e.style.opacity='0.9'; e.style.fontSize=(16+Math.random()*14)+'px';
+      document.body.appendChild(e); setTimeout(()=>e.remove(),2600);
+    }, i*60);
+  }
+
+  function check(){
+    const item = QUESTIONS[idx];
+    const val = norm($('#answer').value);
+    if(!val){ toast('Type something 😊'); return; }
+    const ok = (item.answers||[]).some(a => norm(a)===val);
+    if(ok){
+      $('#result').textContent = 'Correct!'; $('#result').className='result ok';
+      if ($('#nextBtn').disabled) { correct++; updateProgress(); }
+      $('#nextBtn').disabled = false;
+      hearts();
+    } else {
+      $('#result').textContent = 'Not quite — try again 💪'; $('#result').className='result bad';
+    }
+  }
+
+  function next(){
+    if($('#nextBtn').disabled) return; // guard
+    if(idx < QUESTIONS.length-1){ idx++; renderQuestion(); }
+    else { finish(); }
+  }
+
+  function finish(){
+    const allCorrect = (correct === QUESTIONS.length);
+    if (allCorrect){
+      $('#intro').style.display='none'; $('#quiz').style.display='none';
+      const hasVideo = (typeof FINAL_VIDEO_SRC === 'string' && FINAL_VIDEO_SRC.trim() !== '');
+      const imgEl = $('#finalImg');
+      const vidEl = $('#finalVideo');
+      if (hasVideo){
+        vidEl.src = FINAL_VIDEO_SRC; vidEl.style.display='block'; imgEl.style.display='none';
+      } else {
+        imgEl.src = FINAL_IMAGE_SRC; imgEl.style.display='block'; vidEl.style.display='none';
+      }
+      $('#galleryLink').href = GALLERY_URL;
+      $('#reveal').classList.add('open');
+      toast('All answers correct — you unlocked it!'); hearts(); hearts();
+    } else {
+      toast('You need all answers correct to unlock the surprise.');
+    }
+  }
+
+  // events
+  $('#startBtn').addEventListener('click', ()=>{
+    $('#intro').style.display='none'; renderQuestion(); updateProgress();
+  });
+  $('#checkBtn').addEventListener('click', check);
+  $('#nextBtn').addEventListener('click', next);
+  $('#hintBtn').addEventListener('click', ()=>{ usedHint.add(idx); $('#hint').textContent='Hint: ' + (QUESTIONS[idx].hint||''); });
+  $('#answer').addEventListener('keydown', e=>{ if(e.key==='Enter') check(); });
+  $('#themeBtn').addEventListener('click', ()=> document.body.classList.toggle('dark'));
+</script>
+</body>
+</html>
