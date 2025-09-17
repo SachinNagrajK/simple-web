@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Love Gallery 💖</title>
+  <style>
+    :root {
+      --bg: radial-gradient(1200px 800px at 10% 10%, #ffe4ec 0%, #fff 30%, #f7fbff 70%, #eef6ff 100%);
+      --card: rgba(255, 255, 255, 0.7);
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #ec4899; /* pink */
+      --accent-2: #8b5cf6; /* violet */
+      --ring: rgba(236,72,153,0.35);
+      --shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+    }
+    .dark {
+      --bg: radial-gradient(1200px 800px at 10% 10%, #1f1320 0%, #0b0b10 40%, #0a0e1a 100%);
+      --card: rgba(255,255,255,0.06);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #f472b6;
+      --accent-2: #a78bfa;
+      --ring: rgba(244,114,182,0.35);
+      --shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: saturate(140%) blur(8px);
+      background: linear-gradient(to right, rgba(255,255,255,0.6), rgba(255,255,255,0.3));
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+    }
+    .dark header { background: linear-gradient(to right, rgba(17,24,39,0.6), rgba(17,24,39,0.3)); }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 20px;
+    }
+
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .row.spread { justify-content: space-between; }
+
+    h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.2px; display: flex; align-items: center; gap: 8px; }
+    h1 .heart { color: var(--accent); }
+
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(148,163,184,0.3);
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .dark .btn { background: linear-gradient(180deg, rgba(30,41,59,0.8), rgba(15,23,42,0.6)); }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { border-color: transparent; background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: white; }
+
+    .icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(255,255,255,0.85); cursor: pointer; box-shadow: var(--shadow);
+    }
+    .dark .icon-btn { background: rgba(15,23,42,0.6); }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .uploader {
+      margin: 18px 0 8px;
+      border: 2px dashed rgba(148,163,184,0.45);
+      border-radius: 16px; padding: 24px; text-align: center;
+      background: var(--card);
+    }
+    .uploader.dragover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 6px var(--ring);
+    }
+
+    .uploader .big { font-weight: 700; font-size: 16px; }
+
+    input[type="file"] { display: none; }
+
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 18px 0 50px; }
+
+    .card {
+      background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); position: relative; border: 1px solid rgba(148,163,184,0.3);
+    }
+    .imgwrap { width: 100%; height: 260px; background: #e2e8f0; display: grid; place-items: center; overflow: hidden; }
+    .imgwrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .card .meta { padding: 12px 12px 14px; }
+    .card .title { font-weight: 700; font-size: 15px; margin: 0 0 4px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .card .msg { font-size: 14px; color: var(--text); opacity: 0.9; margin: 0; min-height: 1.2em; }
+    .card .date { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+    .card .actbar { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
+
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; background: rgba(236,72,153,0.14); color: var(--accent); border: 1px solid rgba(236,72,153,0.3); }
+
+    .empty { text-align: center; padding: 40px 10px; color: var(--muted); }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed; inset: 0; display: none; place-items: center; background: rgba(2,6,23,0.6); backdrop-filter: blur(4px);
+    }
+    .lightbox.open { display: grid; }
+    .lightbox .panel {
+      width: min(96vw, 900px); max-height: 92vh; background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid rgba(148,163,184,0.35); box-shadow: var(--shadow);
+      display: grid; grid-template-rows: auto 1fr auto; animation: pop .12s ease-out;
+    }
+    @keyframes pop { from { transform: scale(.98); opacity: .6 } to { transform: scale(1); opacity: 1 } }
+    .lightbox .panel header { position: relative; border: none; background: transparent; }
+    .lightbox .panel .hero { width: 100%; max-height: 66vh; background: #000; display: grid; place-items: center; overflow: hidden; }
+    .lightbox img { width: 100%; height: 100%; object-fit: contain; }
+    .lightbox .content { padding: 12px 16px 18px; }
+
+    /* Toggles */
+    .switch { position: relative; width: 50px; height: 28px; background: rgba(148,163,184,0.4); border-radius: 999px; border: 1px solid rgba(148,163,184,0.5); cursor: pointer; }
+    .switch .knob { position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: white; transition: left .18s ease; box-shadow: var(--shadow); }
+    .switch.on .knob { left: 24px; }
+
+    /* Lock screen */
+    .locked .gallery, .locked .uploader { filter: blur(5px) saturate(0.8); pointer-events: none; user-select: none; }
+    .lockbar { display: none; }
+    .locked .lockbar { display: block; margin: 14px 0 -2px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #111827; color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); display:none; }
+
+    /* Floating hearts */
+    .heart-fall { position: fixed; pointer-events: none; font-size: 18px; animation: fall 2.5s linear forwards; }
+    @keyframes fall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Small screens */
+    @media (max-width: 640px) {
+      .imgwrap { height: 210px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap row spread">
+      <h1>Love Gallery <span class="heart">❤</span></h1>
+      <div class="controls">
+        <button class="btn" id="themeBtn" title="Toggle theme">🌗 Theme</button>
+        <button class="btn" id="lockBtn" title="Lock with a passcode">🔒 Lock</button>
+        <button class="btn" id="presentBtn" title="Slideshow mode">▶️ Present</button>
+        <button class="btn" id="exportBtn" title="Export gallery JSON">⬇️ Export</button>
+        <label class="btn" for="importFile" title="Import gallery JSON">⬆️ Import</label>
+        <input id="importFile" type="file" accept="application/json" />
+        <button class="btn primary" id="loveBtn" title="Shower hearts!">Send Love 💕</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="lockbar">
+      <div class="row" style="gap:10px; align-items:center;">
+        <span class="muted">🔐 Locked view. Enter passcode to unlock:</span>
+        <input id="unlockInput" placeholder="Passcode" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,0.5);background:var(--card);color:var(--text);">
+        <button class="btn" id="unlockBtn">Unlock</button>
+      </div>
+    </div>
+
+    <section class="uploader" id="dropZone">
+      <div class="big">Drag & drop photos here</div>
+      <div class="muted" style="margin:6px 0 10px">or</div>
+      <label class="btn" for="imgInput">Choose Images</label>
+      <input id="imgInput" type="file" accept="image/*" multiple />
+      <div class="muted" style="margin-top:10px">Tip: after adding a photo, click ✏️ to add a title & sweet message.</div>
+    </section>
+
+    <section class="gallery" id="gallery"></section>
+
+    <div class="empty" id="emptyState" style="display:none">No photos yet. Add a few and write something sweet 🥰</div>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="panel">
+      <header class="row spread" style="padding:10px 14px;">
+        <div class="row" style="gap:8px;">
+          <button class="icon-btn" id="lbPrev" title="Previous">◀</button>
+          <button class="icon-btn" id="lbNext" title="Next">▶</button>
+        </div>
+        <div class="row" style="gap:8px;">
+          <button class="icon-btn" id="lbPlay" title="Play/Pause">⏯</button>
+          <button class="icon-btn" id="lbClose" title="Close">✖</button>
+        </div>
+      </header>
+      <div class="hero"><img id="lbImg" alt="" /></div>
+      <div class="content">
+        <div id="lbTitle" style="font-weight:800;margin-bottom:4px"></div>
+        <div id="lbMsg" class="muted"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== Utilities =====
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    function toast(msg) {
+      const t = $('#toast');
+      t.textContent = msg; t.style.display = 'block';
+      clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 2200);
+    }
+
+    // Lightweight localStorage wrapper with size guard
+    const storeKey = 'loveGallery.v1';
+    const themeKey = 'loveGallery.theme';
+    const lockKey  = 'loveGallery.lock.hash';
+
+    function save(data) {
+      try {
+        localStorage.setItem(storeKey, JSON.stringify(data));
+        return true;
+      } catch (e) {
+        console.warn('Save failed', e);
+        toast('Storage is full. Consider exporting & clearing some photos.');
+        return false;
+      }
+    }
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(storeKey) || '[]');
+      } catch { return []; }
+    }
+
+    async function hash(text) {
+      if (window.crypto?.subtle) {
+        const enc = new TextEncoder().encode(text);
+        const buf = await crypto.subtle.digest('SHA-256', enc);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+      }
+      // Fallback (not secure, but better than plain)
+      let h = 0; for (let i=0;i<text.length;i++) h = Math.imul(31, h) + text.charCodeAt(i) | 0; return String(h);
+    }
+
+    function humanDate(ts) {
+      try { return new Date(ts).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }); } catch { return '' }
+    }
+
+    // Image compression to fit localStorage (~5MB budget)
+    function readFile(file) {
+      return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); });
+    }
+
+    async function compressImage(file, maxW = 1600, quality = 0.85) {
+      const src = await readFile(file);
+      // Create image
+      const img = new Image();
+      img.src = src; await img.decode();
+      const { width, height } = img;
+      const scale = Math.min(1, maxW / Math.max(width, height));
+      const w = Math.round(width * scale), h = Math.round(height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      return canvas.toDataURL('image/jpeg', quality);
+    }
+
+    // ===== State =====
+    let items = load();
+    let locked = false;
+    let slideshow = null;
+
+    // ===== Rendering =====
+    function render() {
+      const g = $('#gallery');
+      g.innerHTML = '';
+      if (!items.length) { $('#emptyState').style.display = 'block'; return; }
+      $('#emptyState').style.display = 'none';
+
+      for (const it of items) {
+        const card = document.createElement('article'); card.className = 'card'; card.dataset.id = it.id;
+        card.innerHTML = `
+          <div class="actbar">
+            <button class="icon-btn" data-act="view" title="View">🔎</button>
+            <button class="icon-btn" data-act="edit" title="Edit">✏️</button>
+            <button class="icon-btn" data-act="del" title="Delete">🗑</button>
+          </div>
+          <div class="imgwrap"><img alt="photo" loading="lazy" src="${it.data}" /></div>
+          <div class="meta">
+            <div class="title">${escapeHtml(it.title || 'Untitled')}</div>
+            <p class="msg">${escapeHtml(it.message || '')}</p>
+            <div class="date">${humanDate(it.created)}</div>
+          </div>`;
+        g.appendChild(card);
+      }
+    }
+
+    function escapeHtml(s='') {
+      return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    // ===== Event handlers =====
+    function bindEvents() {
+      // Theme
+      $('#themeBtn').addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem(themeKey, document.body.classList.contains('dark') ? 'dark' : 'light');
+      });
+
+      // Drag/drop
+      const dz = $('#dropZone');
+      ;['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('dragover'); }));
+      ;['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('dragover'); }));
+      dz.addEventListener('drop', e => handleFiles([...e.dataTransfer.files]));
+
+      // File input
+      $('#imgInput').addEventListener('change', e => handleFiles([...e.target.files]));
+
+      // Gallery actions (event delegation)
+      $('#gallery').addEventListener('click', async e => {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const card = e.target.closest('.card'); if (!card) return;
+        const id = card.dataset.id; const ix = items.findIndex(x => x.id === id); if (ix < 0) return;
+        const act = btn.dataset.act;
+        if (act === 'del') {
+          if (confirm('Delete this photo?')) { items.splice(ix,1); save(items); render(); }
+        } else if (act === 'edit') {
+          const it = items[ix];
+          const title = prompt('Title', it.title || ''); if (title === null) return;
+          const message = prompt('Write a heartfelt message 💌', it.message || ''); if (message === null) return;
+          it.title = title.trim(); it.message = message.trim(); it.updated = Date.now(); save(items); render();
+        } else if (act === 'view') {
+          openLightbox(ix);
+        }
+      });
+
+      // Export / Import
+      $('#exportBtn').addEventListener('click', exportJson);
+      $('#importFile').addEventListener('change', importJson);
+
+      // Lock / Unlock
+      $('#lockBtn').addEventListener('click', setOrToggleLock);
+      $('#unlockBtn').addEventListener('click', unlock);
+
+      // Present mode
+      $('#presentBtn').addEventListener('click', () => { if (!items.length) return toast('Add photos first ✨'); openLightbox(0, true); });
+
+      // Hearts
+      $('#loveBtn').addEventListener('click', showerHearts);
+
+      // Lightbox controls
+      $('#lbClose').addEventListener('click', closeLightbox);
+      $('#lbPrev').addEventListener('click', () => moveLight(-1));
+      $('#lbNext').addEventListener('click', () => moveLight(+1));
+      $('#lbPlay').addEventListener('click', toggleSlide);
+      $('#lightbox').addEventListener('click', e => { if (e.target.id === 'lightbox') closeLightbox(); });
+      window.addEventListener('keydown', e => {
+        if (!$('#lightbox').classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') moveLight(-1);
+        if (e.key === 'ArrowRight') moveLight(+1);
+      });
+    }
+
+    async function handleFiles(files) {
+      const imgs = files.filter(f => f.type.startsWith('image/'));
+      if (!imgs.length) return toast('Please drop image files.');
+      for (const f of imgs) {
+        const data = await compressImage(f);
+        const it = { id: uid(), data, title: f.name.replace(/\.[^.]+$/, ''), message: '', created: Date.now() };
+        items.unshift(it);
+      }
+      if (!save(items)) return; // already toasted on failure
+      render();
+      toast('Added ' + imgs.length + ' photo' + (imgs.length>1?'s':''));
+    }
+
+    // ===== Export / Import =====
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(items)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'love-gallery.json';
+      a.click(); setTimeout(() => URL.revokeObjectURL(url), 500);
+      toast('Exported your gallery ✅');
+    }
+
+    async function importJson(e) {
+      const file = e.target.files[0]; if (!file) return;
+      try {
+        const txt = await file.text();
+        const arr = JSON.parse(txt);
+        if (!Array.isArray(arr)) throw new Error('Invalid format');
+        // dedupe by data hash or id
+        const existing = new Set(items.map(x => x.id));
+        const merged = [...arr.filter(x => !existing.has(x.id)), ...items];
+        items = merged; save(items); render(); toast('Imported!');
+      } catch (err) {
+        console.error(err); toast('Import failed. Is it a valid JSON export?');
+      } finally {
+        e.target.value = '';
+      }
+    }
+
+    // ===== Auto-load hosted JSON =====
+    function tryAutoLoadHostedJson() {
+      try {
+        fetch('love-gallery.json', { cache: 'no-store' })
+          .then(res => { if (!res.ok) return null; return res.json(); })
+          .then(arr => { if (Array.isArray(arr) && arr.length) { items = arr; save(items); render(); toast('Loaded hosted gallery ✅'); } });
+      } catch (e) {}
+    }
+
+    // ===== Locking =====
+    async function setOrToggleLock() {
+      const current = localStorage.getItem(lockKey);
+      if (!current) {
+        const p1 = prompt('Set a passcode (remember this!)'); if (!p1) return;
+        const p2 = prompt('Confirm passcode'); if (p2 !== p1) return toast('Passcodes did not match.');
+        localStorage.setItem(lockKey, await hash(p1));
+        toast('Lock set. Click again to lock the page.');
+        return;
+      }
+      // Toggle lock
+      locked = !locked;
+      document.body.classList.toggle('locked', locked);
+      if (locked) $('.lockbar').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function unlock() {
+      const input = $('#unlockInput').value || '';
+      const ok = await hash(input) === localStorage.getItem(lockKey);
+      if (ok) { locked = false; document.body.classList.remove('locked'); $('#unlockInput').value = ''; toast('Unlocked ✨'); }
+      else toast('Wrong passcode');
+    }
+
+    // ===== Lightbox / Slideshow =====
+    let lbIndex = 0;
+
+    function openLightbox(index=0, autoplay=false) {
+      lbIndex = Math.max(0, Math.min(items.length-1, index));
+      const lb = $('#lightbox');
+      lb.classList.add('open'); lb.setAttribute('aria-hidden', 'false');
+      updateLightbox();
+      if (autoplay) startSlide();
+    }
+
+    function closeLightbox() { $('#lightbox').classList.remove('open'); $('#lightbox').setAttribute('aria-hidden', 'true'); stopSlide(); }
+
+    function updateLightbox() {
+      const it = items[lbIndex]; if (!it) return;
+      $('#lbImg').src = it.data; $('#lbTitle').textContent = it.title || '';
+      $('#lbMsg').textContent = it.message || '';
+    }
+
+    function moveLight(delta) {
+      lbIndex = (lbIndex + delta + items.length) % items.length;
+      updateLightbox();
+    }
+
+    function startSlide() {
+      stopSlide();
+      slideshow = setInterval(() => moveLight(+1), 2500);
+    }
+
+    function stopSlide() { if (slideshow) { clearInterval(slideshow); slideshow = null; } }
+
+    function toggleSlide() { if (slideshow) stopSlide(); else startSlide(); }
+
+    // ===== Hearts =====
+    function showerHearts() {
+      for (let i=0;i<22;i++) setTimeout(spawnHeart, i*60);
+    }
+    function spawnHeart() {
+      const e = document.createElement('div'); e.className = 'heart-fall'; e.textContent = ['💖','💘','💝','💗','💓'][Math.floor(Math.random()*5)];
+      const x = Math.random()*100; e.style.left = x+'vw'; e.style.top = '-5vh'; e.style.opacity = '0.8'; e.style.fontSize = (16+Math.random()*12)+'px';
+      document.body.appendChild(e); setTimeout(()=>e.remove(), 2600);
+    }
+
+    // ===== Init =====
+    (function init(){
+      if (localStorage.getItem(themeKey) === 'dark') document.body.classList.add('dark');
+      render(); bindEvents();
+      tryAutoLoadHostedJson();
+    })();
+  </script>
+</body>
+</html>
